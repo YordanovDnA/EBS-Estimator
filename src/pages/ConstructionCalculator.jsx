@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, ArrowLeft, Building2, CheckCircle2 } from "lucide-react";
+import "../globals.css";
 
 import PropertyTypeStep from "../components/calculator/PropertyTypeStep";
 import ServicesSelectionStep from "../components/calculator/ServicesSelectionStep";
@@ -32,53 +33,77 @@ export default function ConstructionCalculator() {
     plastering: null,
     materials: null,
     additionals: [],
-    designManagement: null
+    designManagement: null,
   });
 
   const baseSteps = [
     { id: "services", title: "Services", component: ServicesSelectionStep },
-    { id: "property", title: "Property", component: PropertyTypeStep }
+    { id: "property", title: "Property", component: PropertyTypeStep },
   ];
 
   const serviceSteps = [];
-  if (formData.selectedServices.includes('kitchen')) {
-    serviceSteps.push({ id: "kitchen", title: "Kitchen", component: KitchenStep });
+  if (formData.selectedServices.includes("kitchen")) {
+    serviceSteps.push({
+      id: "kitchen",
+      title: "Kitchen",
+      component: KitchenStep,
+    });
   }
-  if (formData.selectedServices.includes('bathroom')) {
-    serviceSteps.push({ id: "bathroom", title: "Bathroom", component: BathroomStep });
+  if (formData.selectedServices.includes("bathroom")) {
+    serviceSteps.push({
+      id: "bathroom",
+      title: "Bathroom",
+      component: BathroomStep,
+    });
   }
-  if (formData.selectedServices.includes('flooring')) {
-    serviceSteps.push({ id: "flooring", title: "Flooring", component: FlooringStep });
+  if (formData.selectedServices.includes("flooring")) {
+    serviceSteps.push({
+      id: "flooring",
+      title: "Flooring",
+      component: FlooringStep,
+    });
   }
-  if (formData.selectedServices.includes('carpentry')) {
-    serviceSteps.push({ id: "carpentry", title: "Carpentry", component: CarpentryStep });
+  if (formData.selectedServices.includes("carpentry")) {
+    serviceSteps.push({
+      id: "carpentry",
+      title: "Carpentry",
+      component: CarpentryStep,
+    });
   }
-  if (formData.selectedServices.includes('painting')) {
-    serviceSteps.push({ id: "painting", title: "Painting", component: PaintingStep });
+  if (formData.selectedServices.includes("painting")) {
+    serviceSteps.push({
+      id: "painting",
+      title: "Painting",
+      component: PaintingStep,
+    });
   }
-  if (formData.selectedServices.includes('plastering')) {
-    serviceSteps.push({ id: "plastering", title: "Plastering", component: PlasteringStep });
+  if (formData.selectedServices.includes("plastering")) {
+    serviceSteps.push({
+      id: "plastering",
+      title: "Plastering",
+      component: PlasteringStep,
+    });
   }
 
   const finalSteps = [
     { id: "additionals", title: "Extras", component: AdditionalsStep },
     { id: "materials", title: "Materials", component: MaterialsStep },
     { id: "design", title: "Design", component: DesignManagementStep },
-    { id: "quote", title: "Quote", component: FinalQuoteStep }
+    { id: "quote", title: "Quote", component: FinalQuoteStep },
   ];
 
   const steps = [...baseSteps, ...serviceSteps, ...finalSteps];
 
   useEffect(() => {
     if (contentRef.current) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentStep]);
 
   const updateFormData = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -102,7 +127,7 @@ export default function ConstructionCalculator() {
 
   const canProceed = () => {
     const currentStepId = steps[currentStep].id;
-    
+
     switch (currentStepId) {
       case "services":
         return formData.selectedServices.length > 0;
@@ -117,7 +142,10 @@ export default function ConstructionCalculator() {
   const isLastStep = currentStep === steps.length - 1;
 
   return (
-    <div className="min-h-screen bg-[#0E0E0E] pb-20 md:pb-12 overflow-x-hidden" ref={contentRef}>
+    <div
+      className="min-h-screen bg-[#0E0E0E] pb-20 md:pb-12 overflow-x-hidden"
+      ref={contentRef}
+    >
       {/* Mobile-Optimized Header */}
       <header className="bg-[#151515] border-b border-[#262626] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3">
@@ -127,12 +155,18 @@ export default function ConstructionCalculator() {
                 <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#0E0E0E]" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-base font-semibold text-[#C8A74A] truncate">EBS Estimator</h1>
-                <p className="text-xs text-[#B8B8B8] hidden sm:block">Exceptional Building Services</p>
+                <h1 className="text-sm sm:text-base font-semibold text-[#C8A74A] truncate">
+                  EBS Estimator
+                </h1>
+                <p className="text-xs text-[#B8B8B8] hidden sm:block">
+                  Exceptional Building Services
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-[#B8B8B8] bg-[#0E0E0E] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#262626]">
-              <span className="font-medium text-[#F5F5F5]">{currentStep + 1}</span>
+              <span className="font-medium text-[#F5F5F5]">
+                {currentStep + 1}
+              </span>
               <span className="text-[#C8A74A] hidden sm:inline">of</span>
               <span className="text-[#F5F5F5] sm:inline">/</span>
               <span className="text-[#F5F5F5]">{steps.length}</span>
@@ -149,7 +183,9 @@ export default function ConstructionCalculator() {
               {steps.map((step, index) => (
                 <div
                   key={index}
-                  className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}
+                  className={`flex items-center ${
+                    index < steps.length - 1 ? "flex-1" : ""
+                  }`}
                 >
                   <div className="flex flex-col items-center">
                     <button
@@ -157,10 +193,10 @@ export default function ConstructionCalculator() {
                       disabled={index > currentStep}
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-300 touch-manipulation ${
                         index < currentStep
-                          ? 'bg-green-600 text-white cursor-pointer active:bg-green-700'
+                          ? "bg-green-600 text-white cursor-pointer active:bg-green-700"
                           : index === currentStep
-                          ? 'bg-[#C8A74A] text-[#0E0E0E] ring-2 ring-[#C8A74A]/30'
-                          : 'bg-[#262626] text-[#B8B8B8] cursor-not-allowed'
+                          ? "bg-[#C8A74A] text-[#0E0E0E] ring-2 ring-[#C8A74A]/30"
+                          : "bg-[#262626] text-[#B8B8B8] cursor-not-allowed"
                       }`}
                     >
                       {index < currentStep ? (
@@ -169,9 +205,13 @@ export default function ConstructionCalculator() {
                         index + 1
                       )}
                     </button>
-                    <span className={`text-[10px] sm:text-xs mt-1 text-center whitespace-nowrap px-1 ${
-                      index === currentStep ? 'text-[#C8A74A] font-medium' : 'text-[#B8B8B8]'
-                    }`}>
+                    <span
+                      className={`text-[10px] sm:text-xs mt-1 text-center whitespace-nowrap px-1 ${
+                        index === currentStep
+                          ? "text-[#C8A74A] font-medium"
+                          : "text-[#B8B8B8]"
+                      }`}
+                    >
                       {step.title}
                     </span>
                   </div>
@@ -180,7 +220,9 @@ export default function ConstructionCalculator() {
                       <div className="h-full bg-[#262626] rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all duration-500 ${
-                            index < currentStep ? 'bg-green-600 w-full' : 'bg-[#262626] w-0'
+                            index < currentStep
+                              ? "bg-green-600 w-full"
+                              : "bg-[#262626] w-0"
                           }`}
                         />
                       </div>
@@ -202,7 +244,9 @@ export default function ConstructionCalculator() {
             canProceed={canProceed()}
             isFirstStep={currentStep === 0}
             isLastStep={isLastStep}
-            nextLabel={currentStep === steps.length - 2 ? 'Calculate' : 'Continue'}
+            nextLabel={
+              currentStep === steps.length - 2 ? "Calculate" : "Continue"
+            }
             mobile={false}
           />
         </div>
@@ -241,7 +285,9 @@ export default function ConstructionCalculator() {
             canProceed={canProceed()}
             isFirstStep={currentStep === 0}
             isLastStep={isLastStep}
-            nextLabel={currentStep === steps.length - 2 ? 'Calculate' : 'Continue'}
+            nextLabel={
+              currentStep === steps.length - 2 ? "Calculate" : "Continue"
+            }
             mobile={true}
           />
         </div>
@@ -257,7 +303,11 @@ export default function ConstructionCalculator() {
               canProceed={canProceed()}
               isFirstStep={currentStep === 0}
               isLastStep={isLastStep}
-              nextLabel={currentStep === steps.length - 2 ? 'Calculate Quote' : 'Continue'}
+              nextLabel={
+                currentStep === steps.length - 2
+                  ? "Calculate Quote"
+                  : "Continue"
+              }
               mobile={false}
             />
           </div>
