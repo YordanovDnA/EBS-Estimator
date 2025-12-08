@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme Tokens */
+:root {
+  --bg: #0E0E0E;
+  --surface: #151515;
+  --line: #262626;
+  --text-primary: #F5F5F5;
+  --text-secondary: #B8B8B8;
+  --accent: #C8A74A;
+}
+
+/* Remove horizontal scrollbar */
+body {
+  overflow-x: hidden;
+}
+
+/* Mobile Optimizations */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ===========================================
+   DROPDOWN MENUS - Make them stand out
+   =========================================== */
+
+/* Dropdown content backgrounds - lighter than page */
+[role="listbox"],
+[data-radix-popper-content-wrapper] [role="presentation"],
+.select-content {
+  background-color: #1D1D1D !important;
+  border: 1px solid #C8A74A !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  color: #F5F5F5 !important;
+}
+
+/* Dropdown items text color */
+[role="option"],
+[data-radix-collection-item] {
+  color: #F5F5F5 !important;
+  background-color: transparent !important;
+}
+
+/* Dropdown item hover */
+[role="option"]:hover,
+[role="option"][data-highlighted],
+[data-radix-collection-item]:hover,
+[data-radix-collection-item][data-highlighted] {
+  background-color: #C8A74A !important;
+  color: #0E0E0E !important;
+}
+
+/* ===========================================
+   QUOTE SECTION TEXT - Force light text
+   =========================================== */
+
+.quote-screen,
+.quote-screen * {
+  color: #F5F5F5 !important;
+}
+
+.quote-screen .text-secondary,
+.quote-screen [class*="text-secondary"] {
+  color: #B8B8B8 !important;
+}
+
+.quote-screen [class*="text-[#C8A74A]"],
+.quote-screen .text-accent {
+  color: #C8A74A !important;
+}
+
+.quote-screen .module-title,
+.quote-screen h3,
+.quote-screen h4 {
+  color: #F5F5F5 !important;
+}
+
+.quote-screen .bullet,
+.quote-screen li {
+  color: #F5F5F5 !important;
+}
+
+.quote-screen .cost-breakdown,
+.quote-screen .cost-breakdown * {
+  color: #F5F5F5 !important;
+}
+
+.quote-screen .cost-breakdown .text-secondary,
+.quote-screen .cost-breakdown [class*="text-secondary"] {
+  color: #B8B8B8 !important;
+}
+
+.quote-screen a {
+  color: #C8A74A !important;
+}
+
+/* Preserve specific color classes */
+.quote-screen .text-green-400,
+.quote-screen .text-green-500 {
+  color: #4ade80 !important;
+}
+
+.quote-screen .text-blue-300,
+.quote-screen .text-blue-400 {
+  color: #60a5fa !important;
+}
+
+.quote-screen .text-red-400,
+.quote-screen .text-red-500 {
+  color: #f87171 !important;
+}
+
+.quote-screen .text-purple-400 {
+  color: #c084fc !important;
+}
+
+/* Buttons in quote section preserve their text color */
+.quote-screen .bg-\[\#C8A74A\] {
+  color: #0E0E0E !important;
+}
+
+/* ===========================================
+   CHECKBOXES - WHITE borders globally
+   =========================================== */
+
+input[type="checkbox"],
+button[role="checkbox"] {
+  border-color: white !important;
+}
+
+input[type="checkbox"]:checked,
+button[role="checkbox"][data-state="checked"] {
+  background-color: #C8A74A !important;
+  border-color: #C8A74A !important;
+}
+
+/* ===========================================
+   MOBILE OPTIMIZATIONS
+   =========================================== */
+
+@media (max-width: 640px) {
+  body {
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+  
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
