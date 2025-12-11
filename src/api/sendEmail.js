@@ -20,6 +20,7 @@ export default async (req) => {
       return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400 });
     }
 
+    // Send internal email to Iliyan
     await resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: process.env.EMAIL_TO,
@@ -27,6 +28,7 @@ export default async (req) => {
       html: internalEmailHtml
     });
 
+    // Send confirmation to customer
     await resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: customerEmail,
@@ -36,6 +38,9 @@ export default async (req) => {
 
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: err.message }), 
+      { status: 500 }
+    );
   }
 };
