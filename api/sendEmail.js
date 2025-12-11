@@ -1,46 +1,43 @@
 import { Resend } from 'resend';
 
-export const config = {
-  runtime: 'edge',
-};
-
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async (req) => {
+export default async function handler(req, res) {
   try {
-    const body = await req.json();
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     const {
       internalEmailHtml,
       customerEmailHtml,
       customerEmail,
-      customerName
-    } = body;
+      customerName,
+    } = req.body;
 
     if (!customerEmail || !internalEmailHtml || !customerEmailHtml) {
-      return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400 });
+      return res.status(400).json({ error: 'Missing fields' });
     }
 
-    // Send internal email to Iliyan
+    // INTERNAL EMAIL
     await resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: process.env.EMAIL_TO,
       subject: `New Quote Request — ${customerName}`,
-      html: internalEmailHtml
+      html: internalEmailHtml,
     });
 
-    // Send confirmation to customer
+    // CUSTOMER EMAIL
     await resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: customerEmail,
       subject: "Your EBS Estimate Request",
-      html: customerEmailHtml
+      html: customerEmailHtml,
     });
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return res.status(200).json({ success: true });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message }), 
-      { status: 500 }
-    );
+    console.error("EMAIL ERROR:", err);
+    return res.status(500).json({ error: err.message });
   }
-};
+}
