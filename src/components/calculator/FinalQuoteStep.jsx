@@ -1053,7 +1053,7 @@ export default function FinalQuoteStep({ formData }) {
       setSubmitted(true);
     } catch (err) {
       console.error("Email error:", err);
-      alert("There was a problem sending your request. Please try again.");
+      alert("EMAIL ERROR: " + err.message);
     }
   };
 
