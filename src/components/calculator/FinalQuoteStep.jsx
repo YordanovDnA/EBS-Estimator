@@ -1091,12 +1091,16 @@ export default function FinalQuoteStep({ formData }) {
                         <p className="font-semibold">• {room.title}</p>
 
                         <ul className="ml-3 space-y-0.5">
-                          {Object.entries(room).map(([key, value]) => {
-                            if (key === "title") return null;
-                            if (value === null || value === undefined)
-                              return null;
-                            if (Array.isArray(value) && value.length === 0)
-                              return null;
+                        {(service.name === "Painting & Decorating"
+                          ? formatPaintingRoom(room)
+                          : formatGenericRoom(room)
+                        ).map((line, idx) => (
+                          <li key={idx} className="text-[#F5F5F5]/80">
+                            – {line}
+                          </li>
+                        ))}
+                      </ul>
+
 
                             const prettyKey = key
                               .replace(/([A-Z])/g, " $1")
@@ -1427,3 +1431,54 @@ export default function FinalQuoteStep({ formData }) {
     </div>
   );
 }
+
+function formatValueLabel(value) {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "Yes" : null;
+  if (value === 0 || value === "none") return null;
+  return value;
+}
+
+function prettifyKey(key) {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+/* =========================
+   PAINTING FORMATTER
+========================= */
+function formatPaintingRoom(room) {
+  const bullets = [];
+
+  if (room.surfaces?.walls || room.surfaces?.ceiling) {
+    bullets.push("Walls & ceiling painted");
+  }
+  if (room.coats > 1) bullets.push(`${room.coats} coats`);
+  if (room.colours > 1) bullets.push(`${room.colours} colours`);
+  if (room.wallpaperRemoval && room.wallpaperRemoval !== "none") {
+    bullets.push(`Wallpaper removal (${room.wallpaperRemoval})`);
+  }
+  if (room.doors > 0) bullets.push(`${room.doors} door(s) painted`);
+  if (room.windows > 0) bullets.push(`${room.windows} window(s) painted`);
+  if (room.minorRepairs) bullets.push("Minor surface repairs included");
+
+  return bullets;
+}
+
+/* =========================
+   GENERIC ROOM FORMATTER
+========================= */
+function formatGenericRoom(room, whitelist = []) {
+  return Object.entries(room)
+    .filter(([key]) => !["title", "name"].includes(key))
+    .map(([key, value]) => {
+      const formatted = formatValueLabel(value);
+      if (!formatted) return null;
+      if (whitelist.length && !whitelist.includes(key)) return null;
+      return `${prettifyKey(key)}: ${formatted}`;
+    })
+    .filter(Boolean);
+}
+
