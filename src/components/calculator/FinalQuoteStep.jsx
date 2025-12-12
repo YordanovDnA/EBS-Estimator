@@ -1062,6 +1062,25 @@ export default function FinalQuoteStep({ formData }) {
         </Card>
       </div>
 
+function getRoomBullets(moduleName, room) {
+  switch (moduleName) {
+    case "Painting & Decorating":
+      return formatPaintingRoom(room);
+    case "Kitchen":
+      return formatKitchenRoom(room);
+    case "Bathroom / WC":
+      return formatBathroomRoom(room);
+    case "Flooring & Tiling":
+      return formatFlooringRoom(room);
+    case "Carpentry & Joinery":
+      return formatCarpentryRoom(room);
+    case "Plastering & Patching":
+      return formatPlasteringRoom(room);
+    default:
+      return [];
+  }
+}
+
       {/* Cost Breakdown with Details */}
       <Card className="bg-[#151515] border-[#262626] p-3 sm:p-4 mb-4">
         <h3 className="text-sm font-semibold text-[#C8A74A] mb-3 module-title">
@@ -1091,31 +1110,15 @@ export default function FinalQuoteStep({ formData }) {
                         <p className="font-semibold">• {room.title}</p>
 
                         <ul className="ml-3 space-y-0.5">
-                        {(service.name === "Painting & Decorating"
-                          ? formatPaintingRoom(room)
-                          : formatGenericRoom(room)
-                        ).map((line, idx) => (
-                          <li key={idx} className="text-[#F5F5F5]/80">
-                            – {line}
-                          </li>
-                        ))}
+                        {getRoomBullets(moduleDetails[idx].module, room).map(
+                          (line, liIndex) => (
+                            <li key={liIndex} className="text-[#F5F5F5]/80">
+                              • {line}
+                            </li>
+                          )
+                        )}
                       </ul>
 
-
-                            const prettyKey = key
-                              .replace(/([A-Z])/g, " $1")
-                              .replace("_", " ");
-
-                            return (
-                              <li key={key} className="text-[#F5F5F5]/80">
-                                {prettyKey}:{" "}
-                                {Array.isArray(value)
-                                  ? value.join(", ")
-                                  : String(value)}
-                              </li>
-                            );
-                          })}
-                        </ul>
                       </div>
                     ))}
                   </div>
