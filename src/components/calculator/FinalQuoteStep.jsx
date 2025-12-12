@@ -58,201 +58,112 @@ const DESIGN_PERCENTAGES = {
 function generateModuleDetails(formData) {
   const details = [];
 
-  // Kitchen - MULTI ROOM
+  // -------------------------
+  // KITCHEN (Multi-room)
+  // -------------------------
   if (formData.kitchen?.areas) {
-    const items = [];
-    formData.kitchen.areas.forEach((area) => {
-      const parts = [];
-      const sizeLabel =
-        { small: "Small", medium: "Medium", large: "Large" }[area.size] ||
-        area.size;
-      parts.push(`${area.name} (${sizeLabel})`);
-
-      const worktopLabel = area.worktop?.replace("_", " ");
-      if (worktopLabel) parts.push(`${worktopLabel} worktops`);
-
-      if (area.requireElectricalAlterations && area.electrics?.length > 0) {
-        parts.push(
-          `electrical: ${area.electrics
-            .map((e) => e.replace("_", " "))
-            .join(", ")}`
-        );
-      }
-      if (area.requirePlumbingAlterations && area.plumbing?.length > 0) {
-        parts.push(
-          `plumbing: ${area.plumbing
-            .map((p) => p.replace("_", " "))
-            .join(", ")}`
-        );
-      }
-      if (area.splashback) parts.push("splashback");
-      if (area.requireFloorTiling && area.floorTilingArea > 0)
-        parts.push(`floor tiles ${area.floorTilingArea} m²`);
-
-      if (parts.length > 0) {
-        items.push(parts.join(", "));
-      }
-    });
-    details.push({ items });
-  } else {
-    details.push(null);
+    const rooms = formData.kitchen.areas.map((area) => ({
+      title: area.name,
+      size: area.size,
+      worktop: area.worktop,
+      splashback: area.splashback,
+      electrical: area.requireElectricalAlterations ? area.electrics : [],
+      plumbing: area.requirePlumbingAlterations ? area.plumbing : [],
+      floorTiling: area.requireFloorTiling ? area.floorTilingArea : null,
+    }));
+    details.push({ module: "Kitchen", rooms });
   }
 
-  // Bathroom / WC - MULTI ROOM with new plumbing structure
+  // -------------------------
+  // BATHROOM / WC
+  // -------------------------
   if (formData.bathroom?.rooms) {
-    const items = [];
-    formData.bathroom.rooms.forEach((room) => {
-      const parts = [];
-      const sizeLabel =
-        { small: "Small", medium: "Medium", large: "Large" }[room.size] ||
-        room.size;
-      const layoutLabel = { keep: "Keep", minor: "Minor", major: "Major" }[
-        room.layout
-      ];
-
-      parts.push(`${room.name} (${sizeLabel}, ${layoutLabel} layout)`);
-
-      if (room.fixtures?.length > 0) {
-        const fixturesText = room.fixtures
-          .map((f) => f.replace("_", " "))
-          .join(", ");
-        parts.push(`fixtures: ${fixturesText}`);
-      }
-
-      if (room.wallTiling !== "0") parts.push(`${room.wallTiling}% walls`);
-      if (room.floorTiling) parts.push("floor tiling");
-      parts.push(`tile size: ${room.tileSize}`);
-
-      if (room.requireElectricalAlterations && room.electrics?.length > 0) {
-        parts.push(
-          `electrics: ${room.electrics
-            .map((e) => e.replace("_", " "))
-            .join(", ")}`
-        );
-      }
-
-      if (room.requirePlumbingAlterations && room.plumbing?.length > 0) {
-        parts.push(
-          `plumbing: ${room.plumbing
-            .map((p) => p.replace("_", " "))
-            .join(", ")}`
-        );
-      }
-
-      parts.push(`finish: ${room.finishQuality}`);
-      parts.push(`access: ${room.access}`);
-
-      items.push(parts.join(", "));
-    });
-    details.push({ items });
-  } else {
-    details.push(null);
+    const rooms = formData.bathroom.rooms.map((room) => ({
+      title: room.name,
+      size: room.size,
+      layout: room.layout,
+      fixtures: room.fixtures,
+      wallTiling: room.wallTiling,
+      floorTiling: room.floorTiling,
+      tileSize: room.tileSize,
+      electrical: room.requireElectricalAlterations ? room.electrics : [],
+      plumbing: room.requirePlumbingAlterations ? room.plumbing : [],
+      finishQuality: room.finishQuality,
+      access: room.access,
+    }));
+    details.push({ module: "Bathroom / WC", rooms });
   }
 
-  // Flooring
+  // -------------------------
+  // FLOORING & TILING
+  // -------------------------
   if (formData.flooring?.areas) {
-    const items = [];
-    formData.flooring.areas.forEach((area) => {
-      const typeLabel = area.type.replace("_", " ");
-      items.push(
-        `${area.name}: ${typeLabel}, ${area.area} m²; ${area.pattern}`
-      );
-    });
-    details.push({ items });
-  } else {
-    details.push(null);
+    const rooms = formData.flooring.areas.map((area) => ({
+      title: area.name,
+      type: area.type,
+      area: area.area,
+      subfloor: area.subfloor,
+      layout: area.layout,
+      pattern: area.pattern,
+      finishQuality: area.finishQuality,
+      removeOld: area.removeOld,
+      trimDoors: area.trimDoors,
+      fitSkirting: area.fitSkirting,
+    }));
+    details.push({ module: "Flooring & Tiling", rooms });
   }
 
-  // Carpentry
+  // -------------------------
+  // CARPENTRY
+  // -------------------------
   if (formData.carpentry?.areas) {
-    const items = [];
-    formData.carpentry.areas.forEach((area) => {
-      const parts = [];
-      if (area.doorCount > 0)
-        parts.push(`${area.doorCount} door${area.doorCount > 1 ? "s" : ""}`);
-      if (area.skirtingMetres > 0)
-        parts.push(`${area.skirtingMetres} m skirting`);
-      if (area.architraveMetres > 0)
-        parts.push(`${area.architraveMetres} m architrave`);
-      if (area.wardrobeMetres > 0)
-        parts.push(`${area.wardrobeMetres} m storage`);
-      if (parts.length > 0) {
-        items.push(`${area.name}: ${parts.join(", ")}`);
-      }
-    });
-    details.push({ items });
-  } else {
-    details.push(null);
+    const rooms = formData.carpentry.areas.map((area) => ({
+      title: area.name,
+      doorCount: area.doorCount,
+      skirtingMetres: area.skirtingMetres,
+      architraveMetres: area.architraveMetres,
+      wardrobeMetres: area.wardrobeMetres,
+      finishType: area.finishType,
+      bespokeComplexity: area.bespokeComplexity,
+    }));
+    details.push({ module: "Carpentry & Joinery", rooms });
   }
 
-  // Painting
+  // -------------------------
+  // PAINTING
+  // -------------------------
   if (formData.painting?.rooms) {
-    const items = [];
-    formData.painting.rooms.forEach((room) => {
-      const typeLabel = {
-        standard: "Standard Room",
-        hallway: "Hallway",
-        stairs: "Stairs & Landing",
-        hall_stairs: "Hall + Stairs + Landing",
-        kitchen: "Kitchen / Diner",
-        bathroom: "Bathroom / WC",
-      }[room.type || "standard"];
-
-      const surfaces = [];
-      if (room.surfaces.walls) surfaces.push("walls");
-      if (room.surfaces.ceiling) surfaces.push("ceiling");
-      if (room.surfaces.woodwork) surfaces.push("woodwork");
-
-      const parts = [
-        `${room.name} (${typeLabel}): ${room.size}`,
-        surfaces.join("+"),
-      ];
-      parts.push(`${room.coats} coat${room.coats > 1 ? "s" : ""}`);
-
-      if (room.wallpaperRemoval !== "none") {
-        parts.push(`wallpaper removal (${room.wallpaperRemoval})`);
-      }
-
-      if (room.doors > 0)
-        parts.push(`${room.doors} door${room.doors > 1 ? "s" : ""}`);
-      if (room.windows > 0)
-        parts.push(`${room.windows} window${room.windows > 1 ? "s" : ""}`);
-
-      if (
-        (room.type === "stairs" || room.type === "hall_stairs") &&
-        room.spindleCount > 0
-      ) {
-        parts.push(`${room.spindleCount} spindles`);
-      }
-
-      items.push(parts.join(", "));
-    });
-    details.push({ items });
-  } else {
-    details.push(null);
+    const rooms = formData.painting.rooms.map((room) => ({
+      title: room.name,
+      type: room.type,
+      size: room.size,
+      surfaces: room.surfaces,
+      coats: room.coats,
+      colours: room.colours,
+      wallpaperRemoval: room.wallpaperRemoval,
+      doors: room.doors,
+      windows: room.windows,
+      spindleCount: room.spindleCount,
+      handrailsStringers: room.handrailsStringers,
+      minorRepairs: room.minorRepairs,
+    }));
+    details.push({ module: "Painting & Decorating", rooms });
   }
 
-  // Plastering
+  // -------------------------
+  // PLASTERING
+  // -------------------------
   if (formData.plastering?.areas) {
-    const items = [];
-    formData.plastering.areas.forEach((area) => {
-      const workTypeLabel = {
-        reskim: "reskim",
-        patch: "patch work",
-        reboard: "reboard & skim",
-        artex: "artex removal",
-      }[area.workType];
-
-      const size =
-        area.workType === "patch"
-          ? `${area.patchCount} patches`
-          : `${area.area} m²`;
-
-      items.push(`${area.name}: ${workTypeLabel}, ${size}`);
-    });
-    details.push({ items });
-  } else {
-    details.push(null);
+    const rooms = formData.plastering.areas.map((area) => ({
+      title: area.name,
+      workType: area.workType,
+      area: area.area,
+      patchCount: area.patchCount,
+      surfaceCondition: area.surfaceCondition,
+      finishLevel: area.finishLevel,
+      access: area.access,
+    }));
+    details.push({ module: "Plastering & Patching", rooms });
   }
 
   return details;
@@ -1172,13 +1083,36 @@ export default function FinalQuoteStep({ formData }) {
                 </span>
               </div>
               {moduleDetails[idx] &&
-                moduleDetails[idx].items &&
-                moduleDetails[idx].items.length > 0 && (
-                  <div className="ml-3 space-y-0.5 mt-1">
-                    {moduleDetails[idx].items.map((detail, i) => (
-                      <p key={i} className="text-xs text-[#F5F5F5] bullet">
-                        • {detail}
-                      </p>
+                moduleDetails[idx].rooms &&
+                moduleDetails[idx].rooms.length > 0 && (
+                  <div className="ml-3 mt-2 space-y-2">
+                    {moduleDetails[idx].rooms.map((room, i) => (
+                      <div key={i} className="text-xs text-[#F5F5F5]">
+                        <p className="font-semibold">• {room.title}</p>
+
+                        <ul className="ml-3 space-y-0.5">
+                          {Object.entries(room).map(([key, value]) => {
+                            if (key === "title") return null;
+                            if (value === null || value === undefined)
+                              return null;
+                            if (Array.isArray(value) && value.length === 0)
+                              return null;
+
+                            const prettyKey = key
+                              .replace(/([A-Z])/g, " $1")
+                              .replace("_", " ");
+
+                            return (
+                              <li key={key} className="text-[#F5F5F5]/80">
+                                {prettyKey}:{" "}
+                                {Array.isArray(value)
+                                  ? value.join(", ")
+                                  : String(value)}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
                     ))}
                   </div>
                 )}
