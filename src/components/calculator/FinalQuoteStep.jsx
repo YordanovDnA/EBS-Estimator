@@ -12,6 +12,31 @@ import {
   Building2,
   Building,
 } from "lucide-react";
+function getRoomBullets(moduleName, room) {
+  switch (moduleName) {
+    case "Painting & Decorating":
+      return formatPaintingRoom(room);
+
+    case "Kitchen":
+      return formatKitchenRoom(room);
+
+    case "Bathroom / WC":
+      return formatBathroomRoom(room);
+
+    case "Flooring & Tiling":
+      return formatFlooringRoom(room);
+
+    case "Carpentry & Joinery":
+      return formatCarpentryRoom(room);
+
+    case "Plastering & Patching":
+      return formatPlasteringRoom(room);
+
+    default:
+      return [];
+  }
+}
+
 
 // Simple HTML escape function
 function escapeHtml(str) {
