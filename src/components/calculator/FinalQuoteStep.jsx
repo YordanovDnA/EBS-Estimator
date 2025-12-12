@@ -534,6 +534,7 @@ function calculateQuote(formData) {
   // Painting calculation - MULTI ROOM with Room Type
   if (formData.painting?.rooms) {
     let totalDays = 0;
+    const roomBreakdown = [];
 
     formData.painting.rooms.forEach((room) => {
       if (!room) return;
@@ -599,6 +600,11 @@ function calculateQuote(formData) {
       roomDays += (room.windows || 0) * 0.08;
 
       totalDays += roomDays;
+
+      roomBreakdown.push({
+        title: room.name,
+        days: Math.round(roomDays * 10) / 10,
+      });
     });
 
     const efficiency = RATES.economy.efficiency;
@@ -608,12 +614,21 @@ function calculateQuote(formData) {
     const costLow = Math.round((daysLow * RATES.economy.daily) / 5) * 5;
     const costHigh = Math.round((daysHigh * RATES.economy.daily) / 5) * 5;
 
+    const avgDailyRate = RATES.economy.daily;
+
+    const roomsWithCost = roomBreakdown.map((r) => ({
+      ...r,
+      costLow: Math.round((r.days * avgDailyRate * 0.9) / 5) * 5,
+      costHigh: Math.round((r.days * avgDailyRate * 1.1) / 5) * 5,
+    }));
+
     services.push({
       name: "Painting & Decorating",
       daysLow,
       daysHigh,
       costLow,
       costHigh,
+      rooms: roomsWithCost,
     });
     totalDaysLow += daysLow;
     totalDaysHigh += daysHigh;
@@ -1110,21 +1125,20 @@ export default function FinalQuoteStep({ formData }) {
                 moduleDetails[idx].rooms &&
                 moduleDetails[idx].rooms.length > 0 && (
                   <div className="ml-3 mt-2 space-y-2">
-                    {moduleDetails[idx].rooms.map((room, i) => (
-                      <div key={i} className="text-xs text-[#F5F5F5]">
-                        <p className="font-semibold">• {room.title}</p>
-
-                        <ul className="ml-3 space-y-0.5">
-                          {getRoomBullets(moduleDetails[idx].module, room).map(
-                            (line, liIndex) => (
-                              <li key={liIndex} className="text-[#F5F5F5]/80">
-                                • {line}
-                              </li>
-                            )
-                          )}
-                        </ul>
+                    {service.rooms && service.rooms.length > 0 && (
+                      <div className="ml-3 mt-2 space-y-2">
+                        {service.rooms.map((room, i) => (
+                          <div key={i} className="text-xs text-[#F5F5F5]">
+                            <p className="font-semibold">
+                              • {room.title}
+                              <span className="text-[#C8A74A] ml-1">
+                                (£{room.costLow} – £{room.costHigh})
+                              </span>
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
             </div>
