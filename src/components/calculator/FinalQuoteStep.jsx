@@ -1125,18 +1125,39 @@ export default function FinalQuoteStep({ formData }) {
                 moduleDetails[idx].rooms &&
                 moduleDetails[idx].rooms.length > 0 && (
                   <div className="ml-3 mt-2 space-y-2">
-                    {service.rooms && service.rooms.length > 0 && (
+                    {moduleDetails[idx]?.rooms?.length > 0 && (
                       <div className="ml-3 mt-2 space-y-2">
-                        {service.rooms.map((room, i) => (
-                          <div key={i} className="text-xs text-[#F5F5F5]">
-                            <p className="font-semibold">
-                              • {room.title}
-                              <span className="text-[#C8A74A] ml-1">
-                                (£{room.costLow} – £{room.costHigh})
-                              </span>
-                            </p>
-                          </div>
-                        ))}
+                        {moduleDetails[idx].rooms.map((room, i) => {
+                          const calcRoom = service.rooms?.[i];
+
+                          return (
+                            <div key={i} className="text-xs text-[#F5F5F5]">
+                              <p className="font-semibold">
+                                • {room.title}
+                                {calcRoom && (
+                                  <span className="text-[#C8A74A] ml-1">
+                                    (£{calcRoom.costLow.toLocaleString()} – £
+                                    {calcRoom.costHigh.toLocaleString()})
+                                  </span>
+                                )}
+                              </p>
+
+                              <ul className="ml-3 space-y-0.5">
+                                {getRoomBullets(
+                                  moduleDetails[idx].module,
+                                  room
+                                ).map((line, liIndex) => (
+                                  <li
+                                    key={liIndex}
+                                    className="text-[#F5F5F5]/80"
+                                  >
+                                    • {line}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
