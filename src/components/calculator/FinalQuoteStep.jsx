@@ -18,17 +18,25 @@ import {
 ========================= */
 
 function escapeHtml(str) {
-  return String(str)
+  return String(str ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
 function roundTo5(n) {
-  return Math.round(n / 5) * 5;
+  return Math.round((Number(n) || 0) / 5) * 5;
 }
 function round1(n) {
-  return Math.round(n * 10) / 10;
+  return Math.round((Number(n) || 0) * 10) / 10;
+}
+function num(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+function prettify(v) {
+  if (!v) return "";
+  return String(v).replace(/_/g, " ");
 }
 
 /* =========================
@@ -71,21 +79,25 @@ const DESIGN_PERCENTAGES = {
 ========================= */
 
 function getRoomBullets(moduleName, room) {
-  switch (moduleName) {
-    case "Painting & Decorating":
-      return formatPaintingRoom(room);
-    case "Kitchen":
-      return formatKitchenRoom(room);
-    case "Bathroom / WC":
-      return formatBathroomRoom(room);
-    case "Flooring & Tiling":
-      return formatFlooringRoom(room);
-    case "Carpentry & Joinery":
-      return formatCarpentryRoom(room);
-    case "Plastering & Patching":
-      return formatPlasteringRoom(room);
-    default:
-      return [];
+  try {
+    switch (moduleName) {
+      case "Painting & Decorating":
+        return formatPaintingRoom(room);
+      case "Kitchen":
+        return formatKitchenRoom(room);
+      case "Bathroom / WC":
+        return formatBathroomRoom(room);
+      case "Flooring & Tiling":
+        return formatFlooringRoom(room);
+      case "Carpentry & Joinery":
+        return formatCarpentryRoom(room);
+      case "Plastering & Patching":
+        return formatPlasteringRoom(room);
+      default:
+        return [];
+    }
+  } catch {
+    return [];
   }
 }
 
@@ -105,7 +117,7 @@ function generateModuleDetails(formData) {
       splashback: !!area.splashback,
       electrical: area.requireElectricalAlterations ? area.electrics || [] : [],
       plumbing: area.requirePlumbingAlterations ? area.plumbing || [] : [],
-      floorTiling: area.requireFloorTiling ? area.floorTilingArea : null,
+      floorTiling: area.requireFloorTiling ? num(area.floorTilingArea) : null,
     }));
     details.push({ module: "Kitchen", rooms });
   }
@@ -133,13 +145,13 @@ function generateModuleDetails(formData) {
     const rooms = formData.flooring.areas.filter(Boolean).map((area) => ({
       title: area.name || "Floor Area",
       type: area.type,
-      area: area.area,
+      area: num(area.area),
       subfloor: area.subfloor,
       layout: area.layout,
       pattern: area.pattern,
       finishQuality: area.finishQuality,
       removeOld: !!area.removeOld,
-      trimDoors: area.trimDoors || 0,
+      trimDoors: num(area.trimDoors),
       fitSkirting: !!area.fitSkirting,
       wasteRemoval: !!area.wasteRemoval,
     }));
@@ -150,10 +162,10 @@ function generateModuleDetails(formData) {
   if (formData.carpentry?.areas?.length) {
     const rooms = formData.carpentry.areas.filter(Boolean).map((area) => ({
       title: area.name || "Carpentry Area",
-      doorCount: area.doorCount || 0,
-      skirtingMetres: area.skirtingMetres || 0,
-      architraveMetres: area.architraveMetres || 0,
-      wardrobeMetres: area.wardrobeMetres || 0,
+      doorCount: num(area.doorCount),
+      skirtingMetres: num(area.skirtingMetres),
+      architraveMetres: num(area.architraveMetres),
+      wardrobeMetres: num(area.wardrobeMetres),
       finishType: area.finishType,
       bespokeComplexity: area.bespokeComplexity,
     }));
@@ -166,15 +178,15 @@ function generateModuleDetails(formData) {
       title: room.name || "Room",
       type: room.type || "standard",
       size: room.size,
-      surfaces: room.surfaces,
-      coats: room.coats,
-      colours: room.colours,
-      wallpaperRemoval: room.wallpaperRemoval,
-      doors: room.doors,
-      windows: room.windows,
-      spindleCount: room.spindleCount,
-      handrailsStringers: room.handrailsStringers,
-      minorRepairs: room.minorRepairs,
+      surfaces: room.surfaces || {},
+      coats: num(room.coats, 1),
+      colours: num(room.colours, 1),
+      wallpaperRemoval: room.wallpaperRemoval || "none",
+      doors: num(room.doors),
+      windows: num(room.windows),
+      spindleCount: num(room.spindleCount),
+      handrailsStringers: !!room.handrailsStringers,
+      minorRepairs: !!room.minorRepairs,
       staircaseHeight: room.staircaseHeight,
     }));
     details.push({ module: "Painting & Decorating", rooms });
@@ -185,8 +197,8 @@ function generateModuleDetails(formData) {
     const rooms = formData.plastering.areas.filter(Boolean).map((area) => ({
       title: area.name || "Plastering Area",
       workType: area.workType,
-      area: area.area,
-      patchCount: area.patchCount,
+      area: num(area.area),
+      patchCount: num(area.patchCount),
       surfaceCondition: area.surfaceCondition,
       finishLevel: area.finishLevel,
       access: area.access,
@@ -232,8 +244,9 @@ function calculateQuote(formData) {
         baseDaysHigh += 0.5;
       }
 
-      if (area.requireFloorTiling && area.floorTilingArea > 0) {
-        const tilingDays = Math.min(1 + area.floorTilingArea / 12, 2.0);
+      const floorTilingArea = num(area.floorTilingArea);
+      if (area.requireFloorTiling && floorTilingArea > 0) {
+        const tilingDays = Math.min(1 + floorTilingArea / 12, 2.0);
         baseDaysLow += tilingDays * 0.8;
         baseDaysHigh += tilingDays;
       }
@@ -417,7 +430,8 @@ function calculateQuote(formData) {
     const roomBreakdown = [];
 
     formData.flooring.areas.filter(Boolean).forEach((area) => {
-      if (!area.type || !area.area) return;
+      const areaM2 = num(area.area);
+      if (!area.type || !areaM2) return;
 
       const speedsPerDay = {
         laminate: 18,
@@ -428,7 +442,7 @@ function calculateQuote(formData) {
         tiles: 8,
       };
       const baseSpeed = speedsPerDay[area.type] || 15;
-      let baseDays = area.area / baseSpeed;
+      let baseDays = areaM2 / baseSpeed;
 
       const subfloorMult =
         { good: 1.0, uneven: 1.2, poor: 1.35 }[area.subfloor] || 1.0;
@@ -448,7 +462,7 @@ function calculateQuote(formData) {
       baseDays *= finishMult;
 
       if (area.removeOld) baseDays += 0.5;
-      baseDays += (area.trimDoors || 0) * 0.1;
+      baseDays += num(area.trimDoors) * 0.1;
       if (area.fitSkirting) baseDays += 0.5;
 
       const lowBase = baseDays * 0.85;
@@ -471,7 +485,6 @@ function calculateQuote(formData) {
     const daysLow = totalDaysLowBase * efficiency * propertyMultiplier;
     const daysHigh = totalDaysHighBase * efficiency * propertyMultiplier;
 
-    // Module cost = sum rooms cost (more intuitive for flooring)
     const roomsWithCost = roomBreakdown.map((r) => {
       const rLowDays = r.lowBase * efficiency * propertyMultiplier;
       const rHighDays = r.highBase * efficiency * propertyMultiplier;
@@ -519,11 +532,11 @@ function calculateQuote(formData) {
 
     formData.carpentry.areas.filter(Boolean).forEach((area) => {
       let baseDays = 0;
-      baseDays += (area.doorCount || 0) * 0.4;
-      baseDays += (area.skirtingMetres || 0) / 15;
-      baseDays += (area.architraveMetres || 0) / 15;
-      baseDays += (area.wardrobeMetres || 0) * 0.6;
-      baseDays += (area.doorCount || 0) * 0.05;
+      baseDays += num(area.doorCount) * 0.4;
+      baseDays += num(area.skirtingMetres) / 15;
+      baseDays += num(area.architraveMetres) / 15;
+      baseDays += num(area.wardrobeMetres) * 0.6;
+      baseDays += num(area.doorCount) * 0.05;
 
       const finishMult =
         { standard: 1.0, premium: 1.15, sprayed: 1.2 }[area.finishType] || 1.0;
@@ -587,7 +600,7 @@ function calculateQuote(formData) {
     totalCostHigh += costHigh;
   }
 
-  /* ---------- PAINTING (already room by room) ---------- */
+  /* ---------- PAINTING (room by room) ---------- */
   if (formData.painting?.rooms?.length) {
     let totalDays = 0;
     const roomBreakdown = [];
@@ -619,12 +632,14 @@ function calculateQuote(formData) {
 
       if (room.type === "stairs" || room.type === "hall_stairs") {
         if (room.staircaseHeight === "double") roomDays += 0.4;
-        roomDays += 0.02 * (room.spindleCount || 0);
+        roomDays += 0.02 * num(room.spindleCount);
         if (room.handrailsStringers) roomDays += 0.1;
       }
 
-      if (room.coats > 1) roomDays *= 1 + 0.5 * (room.coats - 1);
-      if (room.colours > 1) roomDays *= 1 + 0.05 * (room.colours - 1);
+      const coats = num(room.coats, 1);
+      const colours = num(room.colours, 1);
+      if (coats > 1) roomDays *= 1 + 0.5 * (coats - 1);
+      if (colours > 1) roomDays *= 1 + 0.05 * (colours - 1);
 
       if (room.minorRepairs) roomDays += 0.2;
 
@@ -636,11 +651,11 @@ function calculateQuote(formData) {
           "heavy-duty": 1.35,
           "painted-over": 1.5,
         }[room.wallpaperRemoval];
-        roomDays += removalBaseDays * diffMult;
+        roomDays += removalBaseDays * (diffMult || 1);
       }
 
-      roomDays += (room.doors || 0) * 0.1;
-      roomDays += (room.windows || 0) * 0.08;
+      roomDays += num(room.doors) * 0.1;
+      roomDays += num(room.windows) * 0.08;
 
       totalDays += roomDays;
 
@@ -689,13 +704,49 @@ function calculateQuote(formData) {
     const roomBreakdown = [];
 
     formData.plastering.areas.filter(Boolean).forEach((area) => {
+      // ✅ Robust mapping: if your UI uses slightly different workType ids,
+      // this will still calculate instead of returning 0.
+      const workTypeRaw = String(area.workType || "").toLowerCase();
+
+      const areaM2 = num(area.area);
+      const patches = num(area.patchCount);
+
+      const WORKTYPE_MAP = {
+        patch: "patch",
+        patching: "patch",
+        patch_repair: "patch",
+
+        reskim: "reskim",
+        skim: "reskim",
+        skimming: "reskim",
+
+        reboard: "reboard",
+        overboard: "reboard",
+        reboarding: "reboard",
+        boarding: "reboard",
+        reboard_reskim: "reboard",
+
+        artex: "artex",
+        artex_cover: "artex",
+        cover_artex: "artex",
+      };
+
+      const workType = WORKTYPE_MAP[workTypeRaw] || workTypeRaw;
+
       let baseDays = 0;
 
-      if (area.workType === "patch") baseDays = (area.patchCount || 0) * 0.4;
-      else if (area.workType === "reskim") baseDays = (area.area || 0) / 27.5;
-      else if (area.workType === "reboard") baseDays = (area.area || 0) / 10;
-      else if (area.workType === "artex")
-        baseDays = ((area.area || 0) / 27.5) * 1.4;
+      if (workType === "patch") {
+        baseDays = patches * 0.4;
+      } else if (workType === "reskim") {
+        baseDays = areaM2 / 27.5;
+      } else if (workType === "reboard") {
+        baseDays = areaM2 / 10;
+      } else if (workType === "artex") {
+        baseDays = (areaM2 / 27.5) * 1.4;
+      } else {
+        // ✅ Fail-safe: if unknown but area provided, assume reskim
+        baseDays = areaM2 > 0 ? areaM2 / 27.5 : 0;
+      }
 
       const conditionMult =
         { good: 1.0, fair: 1.1, poor: 1.25 }[area.surfaceCondition] || 1.0;
@@ -764,7 +815,7 @@ function calculateQuote(formData) {
 
   if (Array.isArray(formData.additionals)) {
     formData.additionals.forEach((add) => {
-      const total = (add.price || 0) * (add.quantity || 0);
+      const total = num(add.price) * num(add.quantity);
       additionalsTotal += total;
 
       const names = {
@@ -778,7 +829,7 @@ function calculateQuote(formData) {
 
       additionals.push({
         name: names[add.id] || add.id || "Additional",
-        quantity: add.quantity || 0,
+        quantity: num(add.quantity),
         total,
       });
     });
@@ -787,7 +838,7 @@ function calculateQuote(formData) {
   totalCostLow += additionalsTotal;
   totalCostHigh += additionalsTotal;
 
-  /* ---------- MATERIALS ---------- */
+  /* ---------- MATERIALS (custom only in this paste) ---------- */
   let materialsLow = 0;
   let materialsHigh = 0;
   let materialsMid = 0;
@@ -802,19 +853,18 @@ function calculateQuote(formData) {
       Array.isArray(formData.materials.custom)
     ) {
       const total = formData.materials.custom.reduce(
-        (sum, item) => sum + (item.amount || 0),
+        (sum, item) => sum + num(item.amount),
         0
       );
       materialsLow = materialsHigh = materialsMid = total;
+
       formData.materials.custom.forEach((item) => {
-        materialsList.push(`${item.name} (£${item.amount})`);
+        materialsList.push(`${item.name} (£${num(item.amount)})`);
       });
+
       totalCostLow += materialsLow;
       totalCostHigh += materialsHigh;
     }
-
-    // (Keep your ballpark block if you want; I left it out here to keep copy/paste manageable.
-    //  If you want it included, tell me and I’ll paste it back in.)
   }
 
   /* ---------- DESIGN & MANAGEMENT ---------- */
@@ -868,13 +918,15 @@ export default function FinalQuoteStep({ formData }) {
   const [submitted, setSubmitted] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  const quote = useMemo(() => calculateQuote(formData || {}), [formData]);
+  const safeForm = formData || {};
+
+  const quote = useMemo(() => calculateQuote(safeForm), [safeForm]);
   const moduleDetails = useMemo(
-    () => generateModuleDetails(formData || {}),
-    [formData]
+    () => generateModuleDetails(safeForm),
+    [safeForm]
   );
 
-  const PropertyIcon = PROPERTY_ICONS[formData?.propertyType] || Home;
+  const PropertyIcon = PROPERTY_ICONS[safeForm?.propertyType] || Home;
 
   const validateForm = () => {
     const errors = {};
@@ -891,99 +943,156 @@ export default function FinalQuoteStep({ formData }) {
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  // --- helpers for email rendering ---
+
+  // ✅ IMPORTANT FIX: do NOT rely on array index alignment (it breaks when user selects some services)
   function findModuleDetailsByServiceName(serviceName) {
     return moduleDetails.find((m) => m.module === serviceName);
   }
 
+  // email HTML helper
   function renderRoomsHtml(serviceName, service) {
     const md = findModuleDetailsByServiceName(serviceName);
     if (!md?.rooms?.length) return "";
 
     return `
-    <ul style="margin:8px 0 0 18px;">
-      ${md.rooms
-        .map((room, i) => {
-          const calcRoom = service?.rooms?.[i]; // will exist for Painting (unless you add rooms to others later)
-          const roomPrice =
-            calcRoom && calcRoom.costLow != null
-              ? ` <span style="color:#C8A74A;">(£${calcRoom.costLow} – £${calcRoom.costHigh})</span>`
+      <ul style="margin:8px 0 0 18px;">
+        ${md.rooms
+          .map((room, i) => {
+            const calcRoom = service?.rooms?.[i];
+            const roomPrice =
+              calcRoom && calcRoom.costLow != null
+                ? ` <span style="color:#C8A74A;">(£${calcRoom.costLow} – £${calcRoom.costHigh})</span>`
+                : "";
+
+            const bullets = getRoomBullets(md.module, room) || [];
+            const bulletsHtml = bullets.length
+              ? `<ul style="margin:6px 0 10px 18px;">
+                  ${bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}
+                </ul>`
               : "";
 
-          const bullets = getRoomBullets(serviceName, room) || [];
-          const bulletsHtml = bullets.length
-            ? `<ul style="margin:6px 0 10px 18px;">
-                ${bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}
-              </ul>`
-            : "";
-
-          return `
-            <li style="margin:0 0 8px 0;">
-              <strong>${escapeHtml(
-                room.title || room.name || "Room"
-              )}</strong>${roomPrice}
-              ${bulletsHtml}
-            </li>
-          `;
-        })
-        .join("")}
-    </ul>
-  `;
+            return `
+              <li style="margin:0 0 8px 0;">
+                <strong>${escapeHtml(
+                  room.title || room.name || "Room"
+                )}</strong>${roomPrice}
+                ${bulletsHtml}
+              </li>
+            `;
+          })
+          .join("")}
+      </ul>
+    `;
   }
 
+  // ✅ INTERNAL EMAIL: includes full breakdown + room bullets + room pricing (for any module that has service.rooms)
   function buildInternalEmailHTML() {
     return `
-    <h2>New Quote Request</h2>
-    <p><strong>Name:</strong> ${escapeHtml(customerDetails.fullName)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(customerDetails.email)}</p>
-    <p><strong>Phone:</strong> ${escapeHtml(
-      customerDetails.phone || "Not provided"
-    )}</p>
-    <p><strong>Address:</strong> ${escapeHtml(
-      customerDetails.addressLine1
-    )}, ${escapeHtml(customerDetails.addressLine2 || "")}, ${escapeHtml(
+      <div style="font-family:Arial, sans-serif; line-height:1.45; color:#111;">
+        <h2 style="margin:0 0 10px 0;">New Quote Request</h2>
+
+        <p style="margin:0 0 4px 0;"><strong>Name:</strong> ${escapeHtml(
+          customerDetails.fullName
+        )}</p>
+        <p style="margin:0 0 4px 0;"><strong>Email:</strong> ${escapeHtml(
+          customerDetails.email
+        )}</p>
+        <p style="margin:0 0 4px 0;"><strong>Phone:</strong> ${escapeHtml(
+          customerDetails.phone || "Not provided"
+        )}</p>
+        <p style="margin:0 0 4px 0;"><strong>Address:</strong> ${escapeHtml(
+          customerDetails.addressLine1
+        )}, ${escapeHtml(customerDetails.addressLine2 || "")} ${escapeHtml(
       customerDetails.city
     )}, ${escapeHtml(customerDetails.postcode)}</p>
-    <p><strong>Notes:</strong> ${escapeHtml(
-      customerDetails.notes || "None"
-    )}</p>
+        <p style="margin:0 0 10px 0;"><strong>Notes:</strong> ${escapeHtml(
+          customerDetails.notes || "None"
+        )}</p>
 
-    <hr/>
+        <div style="height:1px; background:#ddd; margin:12px 0;"></div>
 
-    <h3>Project Summary</h3>
-    ${quote.services
-      .map(
-        (s) => `
-          <div style="margin: 0 0 14px 0;">
-            <p style="margin:0;">
-              <strong>${escapeHtml(s.name)}:</strong> £${s.costLow} – £${
-          s.costHigh
-        }
-            </p>
-            ${renderRoomsHtml(s.name, s)}
-          </div>
-        `
-      )
-      .join("")}
+        <h3 style="margin:0 0 10px 0;">Project Summary</h3>
 
-    <h3>Total Estimate</h3>
-    <p><strong>Total:</strong> £${quote.totalLow} – £${quote.totalHigh}</p>
-  `;
+        ${quote.services
+          .map(
+            (s) => `
+              <div style="margin:0 0 14px 0;">
+                <p style="margin:0;">
+                  <strong>${escapeHtml(s.name)}:</strong>
+                  £${Number(s.costLow || 0).toLocaleString()} – £${Number(
+              s.costHigh || 0
+            ).toLocaleString()}
+                </p>
+                ${renderRoomsHtml(s.name, s)}
+              </div>
+            `
+          )
+          .join("")}
+
+        <div style="height:1px; background:#ddd; margin:12px 0;"></div>
+
+        <h3 style="margin:0 0 6px 0;">Total Estimate</h3>
+        <p style="margin:0;"><strong>Total:</strong> £${Number(
+          quote.totalLow || 0
+        ).toLocaleString()} – £${Number(
+      quote.totalHigh || 0
+    ).toLocaleString()}</p>
+      </div>
+    `;
   }
 
+  // ✅ CUSTOMER EMAIL: if you want the SAME breakdown as internal, just reuse it.
+  // If you prefer a shorter one, keep your old summary version.
   function buildCustomerEmailHTML() {
+    // Full breakdown email (same as internal)
     return `
-    <h2>Your EBS Estimate Request</h2>
-    <p>Thank you, ${escapeHtml(
-      customerDetails.fullName
-    )}, for requesting an estimate.</p>
+      <div style="font-family:Arial, sans-serif; line-height:1.45; color:#111;">
+        <h2 style="margin:0 0 10px 0;">Your EBS Estimate</h2>
+        <p style="margin:0 0 10px 0;">Thank you, ${escapeHtml(
+          customerDetails.fullName
+        )}. Here is a breakdown of your estimate based on your selections.</p>
 
-    <h3>Total Estimate</h3>
-    <p><strong>£${quote.totalLow} – £${quote.totalHigh}</strong></p>
+        <h3 style="margin:0 0 10px 0;">Estimate Breakdown</h3>
 
-    <p>We’ll review your details and come back to you with a detailed quote and availability.</p>
-    <p>Best regards,<br/>Exceptional Building Services</p>
-  `;
+        ${quote.services
+          .map(
+            (s) => `
+              <div style="margin:0 0 14px 0;">
+                <p style="margin:0;">
+                  <strong>${escapeHtml(s.name)}:</strong>
+                  £${Number(s.costLow || 0).toLocaleString()} – £${Number(
+              s.costHigh || 0
+            ).toLocaleString()}
+                </p>
+                ${renderRoomsHtml(s.name, s)}
+              </div>
+            `
+          )
+          .join("")}
+
+        <div style="height:1px; background:#ddd; margin:12px 0;"></div>
+
+        <h3 style="margin:0 0 6px 0;">Total Estimate</h3>
+        <p style="margin:0 0 10px 0;"><strong>£${Number(
+          quote.totalLow || 0
+        ).toLocaleString()} – £${Number(
+      quote.totalHigh || 0
+    ).toLocaleString()}</strong></p>
+
+        <p style="margin:0 0 6px 0;">
+          We’ll review your details and come back to you with a final fixed quote and availability after any required site checks.
+        </p>
+
+        <p style="margin:0;">
+          Best regards,<br/>
+          Exceptional Building Services
+        </p>
+
+        <p style="margin:10px 0 0 0; font-size:12px; color:#666;">
+          Disclaimer: This is an estimate. Final costs may vary based on site conditions and exact specifications. Subject to site survey.
+        </p>
+      </div>
+    `;
   }
 
   const handleSubmit = async () => {
@@ -1002,6 +1111,7 @@ export default function FinalQuoteStep({ formData }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Email failed");
       setSubmitted(true);
@@ -1040,8 +1150,8 @@ export default function FinalQuoteStep({ formData }) {
           ESTIMATED TOTAL COST
         </p>
         <div className="text-2xl sm:text-3xl font-bold text-[#C8A74A]">
-          £{quote.totalLow.toLocaleString()} - £
-          {quote.totalHigh.toLocaleString()}
+          £{Number(quote.totalLow || 0).toLocaleString()} - £
+          {Number(quote.totalHigh || 0).toLocaleString()}
         </div>
       </Card>
 
@@ -1078,7 +1188,7 @@ export default function FinalQuoteStep({ formData }) {
                 Property Type
               </p>
               <p className="text-xs text-[#F5F5F5] capitalize">
-                {formData?.propertyType?.replace("-", " ") || "—"}
+                {safeForm?.propertyType?.replace("-", " ") || "—"}
               </p>
             </div>
           </div>
@@ -1092,7 +1202,7 @@ export default function FinalQuoteStep({ formData }) {
             <div>
               <p className="text-xs font-medium text-[#F5F5F5]">Services</p>
               <p className="text-xs text-[#F5F5F5]">
-                {formData?.selectedServices?.length || 0} main services
+                {safeForm?.selectedServices?.length || 0} main services
               </p>
             </div>
           </div>
@@ -1106,54 +1216,63 @@ export default function FinalQuoteStep({ formData }) {
         </h3>
 
         <div className="space-y-2 cost-breakdown" style={{ lineHeight: 1.3 }}>
-          {quote.services.map((service, idx) => (
-            <div
-              key={idx}
-              className="pb-2 border-b border-[#262626] last:border-0"
-            >
-              <div className="flex justify-between items-baseline mb-1">
-                <span className="text-sm text-[#F5F5F5] font-medium">
-                  {service.name}
-                </span>
-                <span className="text-sm font-semibold text-[#C8A74A]">
-                  £{service.costLow.toLocaleString()} - £
-                  {service.costHigh.toLocaleString()}
-                </span>
-              </div>
+          {quote.services.map((service, idx) => {
+            const md = findModuleDetailsByServiceName(service.name);
 
-              {moduleDetails[idx]?.rooms?.length > 0 && (
-                <div className="ml-3 mt-2 space-y-2">
-                  {moduleDetails[idx].rooms.map((room, i) => {
-                    const calcRoom = service.rooms?.[i];
-
-                    return (
-                      <div key={i} className="text-xs text-[#F5F5F5]">
-                        <p className="font-semibold">
-                          • {room.title}
-                          {calcRoom && (
-                            <span className="text-[#C8A74A] ml-1">
-                              (£{calcRoom.costLow.toLocaleString()} – £
-                              {calcRoom.costHigh.toLocaleString()})
-                            </span>
-                          )}
-                        </p>
-
-                        <ul className="ml-3 space-y-0.5">
-                          {getRoomBullets(moduleDetails[idx].module, room).map(
-                            (line, liIndex) => (
-                              <li key={liIndex} className="text-[#F5F5F5]/80">
-                                • {line}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    );
-                  })}
+            return (
+              <div
+                key={idx}
+                className="pb-2 border-b border-[#262626] last:border-0"
+              >
+                <div className="flex justify-between items-baseline mb-1">
+                  <span className="text-sm text-[#F5F5F5] font-medium">
+                    {service.name}
+                  </span>
+                  <span className="text-sm font-semibold text-[#C8A74A]">
+                    £{Number(service.costLow || 0).toLocaleString()} - £
+                    {Number(service.costHigh || 0).toLocaleString()}
+                  </span>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {md?.rooms?.length > 0 && (
+                  <div className="ml-3 mt-2 space-y-2">
+                    {md.rooms.map((room, i) => {
+                      const calcRoom = service.rooms?.[i];
+
+                      return (
+                        <div key={i} className="text-xs text-[#F5F5F5]">
+                          <p className="font-semibold">
+                            • {room.title}
+                            {calcRoom && (
+                              <span className="text-[#C8A74A] ml-1">
+                                (£
+                                {Number(calcRoom.costLow || 0).toLocaleString()}{" "}
+                                – £
+                                {Number(
+                                  calcRoom.costHigh || 0
+                                ).toLocaleString()}
+                                )
+                              </span>
+                            )}
+                          </p>
+
+                          <ul className="ml-3 space-y-0.5">
+                            {getRoomBullets(md.module, room).map(
+                              (line, liIndex) => (
+                                <li key={liIndex} className="text-[#F5F5F5]/80">
+                                  • {line}
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {quote.additionals.length > 0 && (
             <div className="pb-2 border-b border-[#262626]">
@@ -1164,7 +1283,7 @@ export default function FinalQuoteStep({ formData }) {
                 {quote.additionals.map((add, idx) => (
                   <p key={idx} className="text-xs text-[#F5F5F5]">
                     • {add.name} (×{add.quantity}) — £
-                    {add.total.toLocaleString()}
+                    {Number(add.total || 0).toLocaleString()}
                   </p>
                 ))}
               </div>
@@ -1178,7 +1297,7 @@ export default function FinalQuoteStep({ formData }) {
                   Materials
                 </span>
                 <span className="text-sm font-semibold text-[#C8A74A]">
-                  £{quote.materialsMid.toLocaleString()}
+                  £{Number(quote.materialsMid || 0).toLocaleString()}
                 </span>
               </div>
 
@@ -1206,17 +1325,17 @@ export default function FinalQuoteStep({ formData }) {
                   Design & Management
                 </span>
                 <span className="text-sm font-semibold text-[#C8A74A]">
-                  £{quote.designManagement.toLocaleString()}
+                  £{Number(quote.designManagement || 0).toLocaleString()}
                 </span>
               </div>
               <div className="ml-3">
                 <p className="text-xs text-[#F5F5F5]">
                   •{" "}
-                  {formData.designManagement === "procurement"
+                  {safeForm.designManagement === "procurement"
                     ? "Procurement (7%)"
-                    : formData.designManagement === "management_procurement"
+                    : safeForm.designManagement === "management_procurement"
                     ? "Management & Procurement (11%)"
-                    : formData.designManagement === "full"
+                    : safeForm.designManagement === "full"
                     ? "Design, Management & Procurement (12%)"
                     : "Design & Management"}
                 </p>
@@ -1464,7 +1583,6 @@ export default function FinalQuoteStep({ formData }) {
 
 /* =========================
    FORMATTERS (PREVENT WHITE SCREEN)
-   Keep simple but reliable.
 ========================= */
 
 function formatPaintingRoom(room) {
@@ -1472,12 +1590,13 @@ function formatPaintingRoom(room) {
   if (room.surfaces?.walls || room.surfaces?.ceiling)
     bullets.push("Walls & ceiling painted");
   if (room.surfaces?.woodwork) bullets.push("Woodwork painted");
-  if (room.coats > 1) bullets.push(`${room.coats} coats`);
-  if (room.colours > 1) bullets.push(`${room.colours} colours`);
+  if (num(room.coats, 1) > 1) bullets.push(`${num(room.coats, 1)} coats`);
+  if (num(room.colours, 1) > 1) bullets.push(`${num(room.colours, 1)} colours`);
   if (room.wallpaperRemoval && room.wallpaperRemoval !== "none")
     bullets.push(`Wallpaper removal (${room.wallpaperRemoval})`);
-  if (room.doors > 0) bullets.push(`${room.doors} door(s) painted`);
-  if (room.windows > 0) bullets.push(`${room.windows} window(s) painted`);
+  if (num(room.doors) > 0) bullets.push(`${num(room.doors)} door(s) painted`);
+  if (num(room.windows) > 0)
+    bullets.push(`${num(room.windows)} window(s) painted`);
   if (room.minorRepairs) bullets.push("Minor surface repairs included");
   return bullets;
 }
@@ -1491,7 +1610,8 @@ function formatKitchenRoom(room) {
     bullets.push(`Electrical changes: ${room.electrical.length} item(s)`);
   if (room.plumbing?.length)
     bullets.push(`Plumbing changes: ${room.plumbing.length} item(s)`);
-  if (room.floorTiling) bullets.push(`Floor tiling: ${room.floorTiling} m²`);
+  if (room.floorTiling)
+    bullets.push(`Floor tiling: ${num(room.floorTiling)} m²`);
   return bullets;
 }
 
@@ -1517,14 +1637,15 @@ function formatBathroomRoom(room) {
 function formatFlooringRoom(room) {
   const bullets = [];
   if (room.type) bullets.push(`Type: ${prettify(room.type)}`);
-  if (room.area) bullets.push(`Area: ${room.area} m²`);
+  if (num(room.area) > 0) bullets.push(`Area: ${num(room.area)} m²`);
   if (room.subfloor) bullets.push(`Subfloor: ${prettify(room.subfloor)}`);
   if (room.layout) bullets.push(`Layout: ${prettify(room.layout)}`);
   if (room.pattern) bullets.push(`Pattern: ${prettify(room.pattern)}`);
   if (room.finishQuality)
     bullets.push(`Finish: ${prettify(room.finishQuality)}`);
   if (room.removeOld) bullets.push("Remove old flooring");
-  if (room.trimDoors) bullets.push(`Trim doors: ${room.trimDoors}`);
+  if (num(room.trimDoors) > 0)
+    bullets.push(`Trim doors: ${num(room.trimDoors)}`);
   if (room.fitSkirting) bullets.push("Fit skirting");
   if (room.wasteRemoval) bullets.push("Waste removal included");
   return bullets;
@@ -1532,11 +1653,13 @@ function formatFlooringRoom(room) {
 
 function formatCarpentryRoom(room) {
   const bullets = [];
-  if (room.doorCount) bullets.push(`Doors: ${room.doorCount}`);
-  if (room.skirtingMetres) bullets.push(`Skirting: ${room.skirtingMetres} m`);
-  if (room.architraveMetres)
-    bullets.push(`Architrave: ${room.architraveMetres} m`);
-  if (room.wardrobeMetres) bullets.push(`Wardrobes: ${room.wardrobeMetres} m`);
+  if (num(room.doorCount) > 0) bullets.push(`Doors: ${num(room.doorCount)}`);
+  if (num(room.skirtingMetres) > 0)
+    bullets.push(`Skirting: ${num(room.skirtingMetres)} m`);
+  if (num(room.architraveMetres) > 0)
+    bullets.push(`Architrave: ${num(room.architraveMetres)} m`);
+  if (num(room.wardrobeMetres) > 0)
+    bullets.push(`Wardrobes: ${num(room.wardrobeMetres)} m`);
   if (room.finishType) bullets.push(`Finish: ${prettify(room.finishType)}`);
   if (room.bespokeComplexity)
     bullets.push(`Bespoke: ${prettify(room.bespokeComplexity)}`);
@@ -1546,16 +1669,12 @@ function formatCarpentryRoom(room) {
 function formatPlasteringRoom(room) {
   const bullets = [];
   if (room.workType) bullets.push(`Work type: ${prettify(room.workType)}`);
-  if (room.area) bullets.push(`Area: ${room.area} m²`);
-  if (room.patchCount) bullets.push(`Patches: ${room.patchCount}`);
+  if (num(room.area) > 0) bullets.push(`Area: ${num(room.area)} m²`);
+  if (num(room.patchCount) > 0)
+    bullets.push(`Patches: ${num(room.patchCount)}`);
   if (room.surfaceCondition)
     bullets.push(`Condition: ${prettify(room.surfaceCondition)}`);
   if (room.finishLevel) bullets.push(`Finish: ${prettify(room.finishLevel)}`);
   if (room.access) bullets.push(`Access: ${prettify(room.access)}`);
   return bullets;
-}
-
-function prettify(v) {
-  if (!v) return "";
-  return String(v).replace(/_/g, " ");
 }
