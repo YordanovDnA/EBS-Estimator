@@ -891,52 +891,99 @@ export default function FinalQuoteStep({ formData }) {
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
+  // --- helpers for email rendering ---
+  function findModuleDetailsByServiceName(serviceName) {
+    return moduleDetails.find((m) => m.module === serviceName);
+  }
+
+  function renderRoomsHtml(serviceName, service) {
+    const md = findModuleDetailsByServiceName(serviceName);
+    if (!md?.rooms?.length) return "";
+
+    return `
+    <ul style="margin:8px 0 0 18px;">
+      ${md.rooms
+        .map((room, i) => {
+          const calcRoom = service?.rooms?.[i]; // will exist for Painting (unless you add rooms to others later)
+          const roomPrice =
+            calcRoom && calcRoom.costLow != null
+              ? ` <span style="color:#C8A74A;">(£${calcRoom.costLow} – £${calcRoom.costHigh})</span>`
+              : "";
+
+          const bullets = getRoomBullets(serviceName, room) || [];
+          const bulletsHtml = bullets.length
+            ? `<ul style="margin:6px 0 10px 18px;">
+                ${bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}
+              </ul>`
+            : "";
+
+          return `
+            <li style="margin:0 0 8px 0;">
+              <strong>${escapeHtml(
+                room.title || room.name || "Room"
+              )}</strong>${roomPrice}
+              ${bulletsHtml}
+            </li>
+          `;
+        })
+        .join("")}
+    </ul>
+  `;
+  }
 
   function buildInternalEmailHTML() {
     return `
-      <h2>New Quote Request</h2>
-      <p><strong>Name:</strong> ${escapeHtml(customerDetails.fullName)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(customerDetails.email)}</p>
-      <p><strong>Phone:</strong> ${escapeHtml(
-        customerDetails.phone || "Not provided"
-      )}</p>
-      <p><strong>Address:</strong> ${escapeHtml(
-        customerDetails.addressLine1
-      )}, ${escapeHtml(customerDetails.addressLine2 || "")}, ${escapeHtml(
+    <h2>New Quote Request</h2>
+    <p><strong>Name:</strong> ${escapeHtml(customerDetails.fullName)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(customerDetails.email)}</p>
+    <p><strong>Phone:</strong> ${escapeHtml(
+      customerDetails.phone || "Not provided"
+    )}</p>
+    <p><strong>Address:</strong> ${escapeHtml(
+      customerDetails.addressLine1
+    )}, ${escapeHtml(customerDetails.addressLine2 || "")}, ${escapeHtml(
       customerDetails.city
     )}, ${escapeHtml(customerDetails.postcode)}</p>
-      <p><strong>Notes:</strong> ${escapeHtml(
-        customerDetails.notes || "None"
-      )}</p>
+    <p><strong>Notes:</strong> ${escapeHtml(
+      customerDetails.notes || "None"
+    )}</p>
 
-      <h3>Project Summary</h3>
-      ${quote.services
-        .map(
-          (s) => `
-            <p><strong>${escapeHtml(s.name)}:</strong> £${s.costLow} – £${
-            s.costHigh
-          }</p>
-          `
-        )
-        .join("")}
+    <hr/>
 
-      <h3>Total Estimate</h3>
-      <p><strong>Total:</strong> £${quote.totalLow} – £${quote.totalHigh}</p>
-    `;
+    <h3>Project Summary</h3>
+    ${quote.services
+      .map(
+        (s) => `
+          <div style="margin: 0 0 14px 0;">
+            <p style="margin:0;">
+              <strong>${escapeHtml(s.name)}:</strong> £${s.costLow} – £${
+          s.costHigh
+        }
+            </p>
+            ${renderRoomsHtml(s.name, s)}
+          </div>
+        `
+      )
+      .join("")}
+
+    <h3>Total Estimate</h3>
+    <p><strong>Total:</strong> £${quote.totalLow} – £${quote.totalHigh}</p>
+  `;
   }
 
   function buildCustomerEmailHTML() {
     return `
-      <h2>Your EBS Estimate Request</h2>
-      <p>Thank you, ${escapeHtml(
-        customerDetails.fullName
-      )}, for requesting a detailed quote.</p>
-      <p>Here is a summary of your estimated project cost:</p>
-      <h3>Total Estimate</h3>
-      <p><strong>£${quote.totalLow} – £${quote.totalHigh}</strong></p>
-      <p>We will contact you shortly to discuss your project in more detail.</p>
-      <p>Best regards,<br/>Exceptional Building Services</p>
-    `;
+    <h2>Your EBS Estimate Request</h2>
+    <p>Thank you, ${escapeHtml(
+      customerDetails.fullName
+    )}, for requesting an estimate.</p>
+
+    <h3>Total Estimate</h3>
+    <p><strong>£${quote.totalLow} – £${quote.totalHigh}</strong></p>
+
+    <p>We’ll review your details and come back to you with a detailed quote and availability.</p>
+    <p>Best regards,<br/>Exceptional Building Services</p>
+  `;
   }
 
   const handleSubmit = async () => {
